@@ -83,7 +83,11 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           overwrite-settings: false # Static setup!
-      - name: Dump job context
+      - name: Dump variable context
+        env:
+          AWS_ACCOUNT: ${{ toJson(secrets.AWS_ACCOUNT) }}
+        run: echo "$AWS_ACCOUNT"
+      - name: Dump secret context
         env:
           AWS_VARIABLE: ${{ toJson(vars.AWS_VARIABLE) }}
         run: echo "$AWS_VARIABLE"
@@ -122,6 +126,15 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           overwrite-settings: false # Static setup!
+
+      - name: Dump variable context
+        env:
+          AWS_ACCOUNT: ${{ toJson(secrets.AWS_ACCOUNT) }}
+        run: echo "$AWS_ACCOUNT"
+      - name: Dump secret context
+        env:
+          AWS_VARIABLE: ${{ toJson(vars.AWS_VARIABLE) }}
+        run: echo "$AWS_VARIABLE"
 
       - name: Dump GitHub context
         env:
