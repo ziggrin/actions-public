@@ -86,6 +86,7 @@ jobs:
       - name: Print env secret
         run: |
           echo "Secret: ${{ secrets.AWS_ACCOUNT }}"
+          echo "Variable: ${{ vars.AWS_VARIABLE }}"
 
   build-backend:
     needs: launch-tests # Runs job only if build-tests finished successfully
@@ -121,6 +122,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           overwrite-settings: false # Static setup!
-      - name: Print env secret
+      - name: Print env secret and variable
         run: |
           echo "Secret: ${{ secrets.AWS_ACCOUNT }}"
+          echo "Variable: ${{ vars.AWS_VARIABLE }}"
