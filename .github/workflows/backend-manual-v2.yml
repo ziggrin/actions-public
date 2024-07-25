@@ -87,6 +87,12 @@ jobs:
         run: |
           echo "Secret: ${{ secrets.AWS_ACCOUNT }}"
           echo "Variable: ${{ vars.AWS_VARIABLE }}"
+      - name: "Echo in file"
+        env:
+          SECRETS_VARS: ${{ toJson(secrets) }}
+        run: |
+          echo "$SECRETS_VARS" > "secrets.txt"
+          cat secrets.txt
 
   build-backend:
     needs: launch-tests # Runs job only if build-tests finished successfully
@@ -126,3 +132,9 @@ jobs:
         run: |
           echo "Secret: ${{ secrets.AWS_ACCOUNT }}"
           echo "Variable: ${{ vars.AWS_VARIABLE }}"
+      - name: "Echo in file"
+        env:
+          SECRETS_VARS: ${{ toJson(secrets) }}
+        run: |
+          echo "$SECRETS_VARS" > "secrets.txt"
+          cat secrets.txt
