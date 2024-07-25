@@ -1,0 +1,158 @@
+name: Manually - backend V2
+
+on:
+  workflow_dispatch:
+    inputs:
+      envToRun:
+        type: choice
+        description: 'Env to run [test|ci|preprod-v1|prod]'
+        required: true
+        default: "ci"
+        options:
+          - "test"
+          - "ci"
+          - "preprod-v1"
+          - "prod"
+      choice-run-migration:
+        type: choice
+        description: Should it run DB migration? (click-and-collect)
+        required: true
+        default: "False"
+        options:
+          - "True"
+          - "False"
+      boolean-click-and-collect:
+        type: boolean
+        description: Run click-and-collect
+        default: true
+      boolean-click-and-collect-rfid:
+        type: boolean
+        description: Run click-and-collect-rfid
+        default: true
+      boolean-click-and-collect-box:
+        type: boolean
+        description: Run click-and-collect-box
+        default: true
+      boolean-click-and-collect-qr:
+        type: boolean
+        description: Run click-and-collect-qr
+        default: true
+      boolean-click-and-collect-kafka-consumer:
+        type: boolean
+        description: Run click-and-collect-kafka-consumer
+        default: true
+      boolean-invoice-kafka-consumer:
+        type: boolean
+        description: Run invoice-kafka-consumer
+        default: true
+      boolean-sms-email:
+        type: boolean
+        description: Run sms and email
+        default: true
+      boolean-click-and-collect-delivery-code:
+        type: boolean
+        description: Run click-and-collect-delivery-code
+        default: true
+
+jobs:
+  launch-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: ${{ inputs.envToRun }}
+    steps:
+      - name: Print inputs
+        run: |
+          echo "Env to run: ${{ inputs.envToRun }}
+          Should it run DB migration: ${{ inputs.choice-run-migration }}
+          Click-and-collect: ${{ inputs.boolean-click-and-collect }}
+          Click-and-collect-rfid: ${{ inputs.boolean-click-and-collect-rfid }}
+          Click-and-collect-box: ${{ inputs.boolean-click-and-collect-box }}
+          Click-and-collect-qr: ${{ inputs.boolean-click-and-collect-qr }}
+          Click-and-collect-kafka-consumer: ${{ inputs.boolean-click-and-collect-kafka-consumer }}
+          Invoice-kafka-consumer: ${{ inputs.boolean-invoice-kafka-consumer }}
+          Sms and email: ${{ inputs.boolean-sms-email }}
+          Click-and-collect-delivery-code: ${{ inputs.boolean-click-and-collect-delivery-code }}"
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up JDK 17
+        uses: actions/setup-java@v2
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          overwrite-settings: false # Static setup!
+      - name: Dump variable context
+        env:
+          AWS_VARIABLE: ${{ toJson(vars.AWS_VARIABLE) }}
+        run: echo "$AWS_VARIABLE"
+
+  build-backend:
+    needs: launch-tests # Runs job only if build-tests finished successfully
+    strategy:
+      fail-fast: false
+      matrix:
+        aws-service: [click-and-collect, click-and-collect-rfid, click-and-collect-box, click-and-collect-qr, click-and-collect-kafka-consumer, invoice-kafka-consumer, sms, email, click-and-collect-delivery-code]
+        exclude:
+          - aws-service: ${{ inputs.boolean-click-and-collect != true && 'click-and-collect' }}
+          - aws-service: ${{ inputs.boolean-click-and-collect-rfid != true && 'click-and-collect-rfid' }}
+          - aws-service: ${{ inputs.boolean-click-and-collect-box != true && 'click-and-collect-box' }}
+          - aws-service: ${{ inputs.boolean-click-and-collect-qr != true && 'click-and-collect-qr' }}
+          - aws-service: ${{ inputs.boolean-click-and-collect-kafka-consumer != true && 'click-and-collect-kafka-consumer' }}
+          - aws-service: ${{ inputs.boolean-invoice-kafka-consumer != true && 'invoice-kafka-consumer' }}
+          - aws-service: ${{ inputs.boolean-sms-email != true && 'sms' }} # sms and email tick boxes are merged but they still run on a different matrixes
+          - aws-service: ${{ inputs.boolean-sms-email != true && 'email' }}
+          - aws-service: ${{ inputs.boolean-click-and-collect-delivery-code != true && 'click-and-collect-delivery-code' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: ${{ inputs.envToRun }}
+    steps:
+      - name: Print inputs
+        run: |
+          echo "Env to run: ${{ inputs.envToRun }}"
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up JDK 17
+        uses: actions/setup-java@v2
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          overwrite-settings: false # Static setup!
+
+      - name: Dump variable context
+        env:
+          AWS_VARIABLE: ${{ toJson(vars.AWS_VARIABLE) }}
+        run: echo "$AWS_VARIABLE"
+
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+      - name: Dump job context
+        env:
+          JOB_CONTEXT: ${{ toJson(job) }}
+        run: echo "$JOB_CONTEXT"
+      - name: Dump steps context
+        env:
+          STEPS_CONTEXT: ${{ toJson(steps) }}
+        run: echo "$STEPS_CONTEXT"
+      - name: Dump runner context
+        env:
+          RUNNER_CONTEXT: ${{ toJson(runner) }}
+        run: echo "$RUNNER_CONTEXT"
+      - name: Dump strategy context
+        env:
+          STRATEGY_CONTEXT: ${{ toJson(strategy) }}
+        run: echo "$STRATEGY_CONTEXT"
+      - name: Dump matrix context
+        env:
+          MATRIX_CONTEXT: ${{ toJson(matrix) }}
+        run: echo "$MATRIX_CONTEXT"
+
+      - name: Show default environment variables
+        run: |
+          echo "The job_id is: $GITHUB_JOB"   # reference the default environment variables
+          echo "The id of this action is: $GITHUB_ACTION"   # reference the default environment variables
+          echo "The run id is: $GITHUB_RUN_ID"
+          echo "The GitHub Actor's username is: $GITHUB_ACTOR"
+          echo "GitHub SHA: $GITHUB_SHA"
