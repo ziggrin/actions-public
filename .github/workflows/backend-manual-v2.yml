@@ -83,7 +83,11 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           overwrite-settings: false # Static setup!
-          
+      - name: Dump job context
+        env:
+          AWS_VARIABLE: ${{ toJson(vars.AWS_VARIABLE) }}
+        run: echo "$AWS_VARIABLE"
+
   build-backend:
     needs: launch-tests # Runs job only if build-tests finished successfully
     strategy:
@@ -118,11 +122,6 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           overwrite-settings: false # Static setup!
-
-      - name: Set Environment Variable
-        run: echo "MY_VAR=Hello, World!" >> $GITHUB_ENV
-      - name: Print Environment Variable
-        run: echo "MY_VAR is ${{ env.MY_VAR }}"
 
       - name: Dump GitHub context
         env:
